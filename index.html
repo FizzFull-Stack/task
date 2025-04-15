@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Game-Style Study Timer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Ubuntu+Mono:wght@400;700&display=swap");
+
+      body {
+        font-family: "Ubuntu Mono", monospace;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        color: #e6f1ff;
+      }
+
+      .game-card {
+        background: rgba(30, 41, 59, 0.7);
+        border: 2px solid #4f46e5;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(8px);
+        transition: all 0.3s ease;
+      }
+
+      .game-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(79, 70, 229, 0.4);
+      }
+
+      .timer-display {
+        font-family: "Press Start 2P", cursive;
+        text-shadow: 0 0 10px rgba(79, 70, 229, 0.7);
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        border: none;
+        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
+      }
+
+      .btn-danger {
+        background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+        border: none;
+        box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+      }
+
+      .progress-bar {
+        height: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4f46e5 0%, #a855f7 100%);
+        border-radius: 3px;
+        transition: width 0.5s ease;
+      }
+
+      .glow-text {
+        text-shadow: 0 0 8px rgba(79, 70, 229, 0.7);
+      }
+
+      .history-item {
+        border-left: 3px solid #4f46e5;
+        transition: all 0.3s ease;
+      }
+
+      .history-item:hover {
+        background: rgba(79, 70, 229, 0.1);
+        transform: translateX(5px);
+      }
+
+      .pixel-corners {
+        position: relative;
+      }
+
+      .pixel-corners::before,
+      .pixel-corners::after {
+        content: "";
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        border: 2px solid #4f46e5;
+      }
+
+      .pixel-corners::before {
+        top: -2px;
+        left: -2px;
+        border-right: none;
+        border-bottom: none;
+      }
+
+      .pixel-corners::after {
+        bottom: -2px;
+        right: -2px;
+        border-left: none;
+        border-top: none;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+      <!-- Header -->
+      <header class="flex flex-col items-center mb-10">
+        <h1 class="text-4xl font-bold text-center mb-2 glow-text">
+          <span class="text-indigo-400">STUDY</span>
+          <span class="text-purple-400">QUEST</span>
+        </h1>
+        <p class="text-indigo-300 text-center max-w-md">
+          Track your learning sessions like a game character tracking quests!
+          Each session is a step toward leveling up your skills.
+        </p>
+      </header>
+
+      <!-- Timer Section -->
+      <div class="game-card p-6 mb-10 pixel-corners">
+        <h2
+          class="text-xl font-semibold mb-4 text-indigo-300 flex items-center"
+        >
+          <i class="fas fa-hourglass-start mr-2"></i> CURRENT QUEST
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-indigo-200 mb-1"
+                >QUEST TITLE</label
+              >
+              <input
+                type="text"
+                id="timerTitle"
+                placeholder="e.g. Defeat Calculus Boss"
+                class="w-full px-4 py-3 bg-slate-800 border border-indigo-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-indigo-100"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-indigo-200 mb-1"
+                >QUEST DESCRIPTION</label
+              >
+              <input
+                type="text"
+                id="timerDesc"
+                placeholder="e.g. Complete Chapter 5 exercises"
+                class="w-full px-4 py-3 bg-slate-800 border border-indigo-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-indigo-100"
+              />
+            </div>
+          </div>
+
+          <div class="flex flex-col justify-between">
+            <div class="text-center mb-4">
+              <div
+                class="text-4xl font-mono timer-display text-purple-300 mb-2"
+                id="display"
+              >
+                00:00:00
+              </div>
+              <div class="progress-bar">
+                <div
+                  class="progress-fill"
+                  id="progressBar"
+                  style="width: 0%"
+                ></div>
+              </div>
+            </div>
+
+            <div class="flex justify-center space-x-4">
+              <button
+                id="startTimer"
+                class="btn-primary px-6 py-3 rounded-lg font-medium"
+              >
+                <i class="fas fa-play mr-2"></i>START QUEST
+              </button>
+              <button
+                id="stopTimer"
+                disabled
+                class="btn-danger px-6 py-3 rounded-lg font-medium opacity-50 cursor-not-allowed"
+              >
+                <i class="fas fa-stop mr-2"></i>COMPLETE
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- History Section -->
+      <div class="game-card p-6">
+        <h2
+          class="text-xl font-semibold mb-6 text-indigo-300 flex items-center"
+        >
+          <i class="fas fa-scroll mr-2"></i> QUEST LOG
+        </h2>
+
+        <div id="emptyHistory" class="text-center py-12 text-indigo-300">
+          <i class="fas fa-clock text-5xl mb-4 opacity-50"></i>
+          <p class="text-lg">Your quest log is empty.</p>
+          <p class="text-sm text-indigo-400 mt-2">
+            Start a quest to begin your adventure!
+          </p>
+        </div>
+
+        <div id="historyContainer" class="space-y-4 hidden">
+          <!-- History items will be inserted here -->
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // DOM Elements
+      const timerTitle = document.getElementById("timerTitle");
+      const timerDesc = document.getElementById("timerDesc");
+      const startBtn = document.getElementById("startTimer");
+      const stopBtn = document.getElementById("stopTimer");
+      const display = document.getElementById("display");
+      const progressBar = document.getElementById("progressBar");
+      const historyContainer = document.getElementById("historyContainer");
+      const emptyHistory = document.getElementById("emptyHistory");
+
+      // Timer variables
+      let startTime;
+      let timerInterval;
+      let isRunning = false;
+      let currentTimer = null;
+      let targetDuration = 25 * 60; // Default target: 25 minutes (can be made customizable)
+
+      // Load history from localStorage
+      let timerHistory = JSON.parse(localStorage.getItem("timerHistory")) || [];
+
+      // Display existing history
+      renderHistory();
+
+      // Event Listeners
+      startBtn.addEventListener("click", startTimer);
+      stopBtn.addEventListener("click", stopTimer);
+
+      // Timer functions
+      function startTimer() {
+        if (isRunning) return;
+
+        const title = timerTitle.value.trim();
+        const desc = timerDesc.value.trim();
+
+        if (!title) {
+          alert("Every quest needs a title! Please name your quest.");
+          return;
+        }
+
+        isRunning = true;
+        startTime = new Date();
+        currentTimer = {
+          title,
+          desc,
+          startTime: startTime.toISOString(),
+          endTime: null,
+          duration: 0,
+        };
+
+        startBtn.disabled = true;
+        startBtn.classList.add("opacity-50", "cursor-not-allowed");
+        stopBtn.disabled = false;
+        stopBtn.classList.remove("opacity-50", "cursor-not-allowed");
+
+        timerInterval = setInterval(updateDisplay, 1000);
+        updateDisplay();
+
+        // Play sound effect
+        playSound("start");
+      }
+
+      function stopTimer() {
+        if (!isRunning) return;
+
+        clearInterval(timerInterval);
+        isRunning = false;
+
+        const endTime = new Date();
+        currentTimer.endTime = endTime.toISOString();
+        currentTimer.duration = Math.floor(
+          (endTime - new Date(currentTimer.startTime)) / 1000
+        );
+
+        // Add to history
+        timerHistory.unshift(currentTimer);
+        saveHistory();
+        renderHistory();
+
+        // Reset UI
+        display.textContent = "00:00:00";
+        progressBar.style.width = "0%";
+        startBtn.disabled = false;
+        startBtn.classList.remove("opacity-50", "cursor-not-allowed");
+        stopBtn.disabled = true;
+        stopBtn.classList.add("opacity-50", "cursor-not-allowed");
+
+        // Clear form
+        timerTitle.value = "";
+        timerDesc.value = "";
+
+        // Play completion sound
+        playSound("complete");
+
+        // Show XP gained notification
+        showNotification(
+          `Quest Complete! +${Math.floor(currentTimer.duration / 60)} XP`
+        );
+
+        currentTimer = null;
+      }
+
+      function updateDisplay() {
+        if (!isRunning) return;
+
+        const now = new Date();
+        const elapsed = Math.floor(
+          (now - new Date(currentTimer.startTime)) / 1000
+        );
+        currentTimer.duration = elapsed;
+
+        const hours = Math.floor(elapsed / 3600);
+        const minutes = Math.floor((elapsed % 3600) / 60);
+        const seconds = Math.floor(elapsed % 60);
+
+        display.textContent = `${hours.toString().padStart(2, "0")}:${minutes
+          .toString()
+          .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+
+        // Update progress bar (based on target duration)
+        const progressPercent = Math.min(100, (elapsed / targetDuration) * 100);
+        progressBar.style.width = `${progressPercent}%`;
+
+        // Change color when reaching target
+        if (progressPercent >= 100) {
+          progressBar.style.background =
+            "linear-gradient(90deg, #10b981 0%, #34d399 100%)";
+        } else if (progressPercent >= 75) {
+          progressBar.style.background =
+            "linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%)";
+        } else {
+          progressBar.style.background =
+            "linear-gradient(90deg, #4f46e5 0%, #a855f7 100%)";
+        }
+      }
+
+      // History functions
+      function saveHistory() {
+        localStorage.setItem("timerHistory", JSON.stringify(timerHistory));
+      }
+
+      function renderHistory() {
+        if (timerHistory.length === 0) {
+          emptyHistory.style.display = "block";
+          historyContainer.style.display = "none";
+          return;
+        }
+
+        emptyHistory.style.display = "none";
+        historyContainer.style.display = "block";
+        historyContainer.innerHTML = "";
+
+        timerHistory.forEach((timer, index) => {
+          const startDate = new Date(timer.startTime);
+          const endDate = timer.endTime ? new Date(timer.endTime) : null;
+
+          const dateStr = startDate.toLocaleDateString("en-US", {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+          });
+
+          const startTimeStr = startDate.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+          const endTimeStr = endDate
+            ? endDate.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "--:--";
+
+          const durationHours = Math.floor(timer.duration / 3600);
+          const durationMinutes = Math.floor((timer.duration % 3600) / 60);
+          const durationSeconds = timer.duration % 60;
+          const durationStr = `${
+            durationHours > 0 ? durationHours + "h " : ""
+          }${durationMinutes}m ${durationSeconds}s`;
+
+          // Calculate XP (1 XP per minute)
+          const xp = Math.floor(timer.duration / 60);
+
+          const historyItem = document.createElement("div");
+          historyItem.className = "history-item bg-slate-800/50 p-4 rounded-lg";
+          historyItem.innerHTML = `
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div class="flex-1">
+                            <h3 class="font-bold text-lg text-indigo-300">${
+                              timer.title
+                            }</h3>
+                            <p class="text-sm text-indigo-200">${
+                              timer.desc || "No description provided"
+                            }</p>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4">
+                            <div class="text-center">
+                                <div class="text-xs text-indigo-400">DURATION</div>
+                                <div class="font-mono text-purple-300">${durationStr}</div>
+                            </div>
+                            
+                            <div class="text-center">
+                                <div class="text-xs text-indigo-400">DATE</div>
+                                <div class="text-indigo-200">${dateStr}</div>
+                            </div>
+                            
+                            <div class="text-center">
+                                <div class="text-xs text-indigo-400">TIME</div>
+                                <div class="text-indigo-200">${startTimeStr} - ${endTimeStr}</div>
+                            </div>
+                            
+                            <div class="text-center bg-indigo-900/50 px-3 py-1 rounded-full">
+                                <div class="text-xs text-indigo-300">SKILL EARNED</div>
+                                <div class="font-bold text-yellow-400">+${xp}</div>
+                            </div>
+                            
+                            <button onclick="deleteTimer(${index})" class="text-red-400 hover:text-red-300 px-2">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+          historyContainer.appendChild(historyItem);
+        });
+      }
+
+      function deleteTimer(index) {
+        if (confirm("Delete this quest from your log?")) {
+          timerHistory.splice(index, 1);
+          saveHistory();
+          renderHistory();
+          playSound("delete");
+        }
+      }
+
+      // Sound effects
+      function playSound(type) {
+        // In a real app, you would play actual sound files
+        console.log(`Playing ${type} sound effect`);
+      }
+
+      // Notification
+      function showNotification(message) {
+        const notification = document.createElement("div");
+        notification.className =
+          "fixed top-4 right-4 bg-indigo-600 text-white px-6 py-3 rounded-lg shadow-lg animate-bounce z-50";
+        notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-trophy mr-3 text-yellow-300"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+          notification.classList.remove("animate-bounce");
+          notification.classList.add(
+            "opacity-0",
+            "transition-opacity",
+            "duration-500"
+          );
+          setTimeout(() => notification.remove(), 500);
+        }, 3000);
+      }
+
+      // Make functions available globally
+      window.deleteTimer = deleteTimer;
+    </script>
+  </body>
+</html>
